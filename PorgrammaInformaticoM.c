@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
     file = fopen(NameF, "w+");
   }
 
-  /***scrivo il nome del file nel file nome corrente affinch� possa essere usato da programmi esterni***/
+  /***scrivo il nome del file nel file "nome corrente" affinché possa essere usato da programmi esterni***/
 
   currN = fopen("currN.txt", "w");
   fprintf(currN, NameF);
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
   nloc = 0;
   trg = 0;
 
-  while (1)
+  while (1) 
   { // itero per un numero infinito di volte (condizione sempre verificata)
 
     n = RS232_PollComport(cport_nr, buf, 4095); // numero di bytes ricevuti attraverso la porta seriale, messi in buf il cui massimo valore rappresentabile è 4095
