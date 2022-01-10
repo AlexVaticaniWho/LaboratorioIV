@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
         { // Caso in cui devo ricostruire il pacchetto
           acquisizione(6 - lostedInfo, &nloc, gmp_run, file, 1);
         }
-        acquisizione(n, &nloc, gmp_run, file, 0);
+        lostedInfo = acquisizione(n, &nloc, gmp_run, file, 0);
       }
 
       printf("cnt %d received %i bytes \n", cnt, n);
