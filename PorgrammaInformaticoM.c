@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
   nloc = 0;
   trg = 0;
 
-  while (1) 
+  while (1)
   { // itero per un numero infinito di volte (condizione sempre verificata)
 
     n = RS232_PollComport(cport_nr, buf, 4095); // numero di bytes ricevuti attraverso la porta seriale, messi in buf il cui massimo valore rappresentabile è 4095
@@ -144,16 +144,16 @@ int main(int argc, char *argv[])
     }
   }
 
-#ifdef _WIN32
-  Sleep(400); // sospende temporaneamente il processo per 400ms
-#else
-  usleep(4000000);
-#endif
-}
+  #ifdef _WIN32
+    Sleep(400); // sospende temporaneamente il processo per 400ms
+  #else
+    usleep(4000000);
+  #endif
+  }
 
-fclose(file);
+  fclose(file);
+  return (0);
 
-return (0);
 }
 
 double decodeTemperature(unsigned int rbuf)
