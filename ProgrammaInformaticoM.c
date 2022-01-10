@@ -138,11 +138,12 @@ int main(int argc, char *argv[])
       printf("cnt %d received %i bytes \n", cnt, n);
       cnt++;
     }
-#ifdef _WIN32
-    Sleep(400); // sospende temporaneamente il processo per 400ms
-#else
-    usleep(4000000);
-#endif
+    
+    #ifdef _WIN32
+        Sleep(400); // sospende temporaneamente il processo per 400ms
+    #else
+        usleep(4000000);
+    #endif
   }
   fclose(file);
 
