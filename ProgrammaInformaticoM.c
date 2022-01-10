@@ -60,14 +60,12 @@ int main(int argc, char *argv[])
 
   if (argv[1] == NULL)
   {
-
     printf("format: read_rx Numero di ore di acquisizione \n");
     return -1;
   }
 
   else
   {
-
     time_acq_h_MAX = atoi(argv[1]); // numero di ore massimo (int)
     sprintf(NameF, "sht75_nblab03_Hum_Temp_RUN_%04d%02d%02d%02d%02d%02d_%d_h.txt", ty, tmon, tday, thour, tmin, tsec, time_acq_h_MAX);
     printf("file_open %s --> durata in ore %d\n", NameF, time_acq_h_MAX);
@@ -102,6 +100,7 @@ int main(int argc, char *argv[])
 
     t = time(NULL);
     gmp_run = gmtime(&t);
+
     if (gmp_run == NULL)
       printf("error on gmp_run");
     else
@@ -127,12 +126,13 @@ int main(int argc, char *argv[])
       /***********acquisizione dati*************/
       if (n > 0)
       {
+        nloc ++;
+
         if (lostedInfo > 0)
         { // Caso in cui devo ricostruire il pacchetto
-          acquisizione(6 - lostedInfo, (&nloc) + 1, gmp_run, file, 1);
+          acquisizione(6 - lostedInfo, &nloc, gmp_run, file, 1);
         }
-
-        lostedInfo = acquisizione(n, (&nloc) + 1, gmp_run, file, 0);
+        lostedInfo = acquisizione(n, &nloc, gmp_run, file, 0);
       }
 
       printf("cnt %d received %i bytes \n", cnt, n);
@@ -207,8 +207,8 @@ int acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, int rebuildPa
 
   for (index; index < n; index++)
   {
-    // la i va da 0 a n-1, con n la lunghezza dei byte presi, per ogni i avremo sht_nloc=buf_i
-    // quando i=0 e i=1, gira a vuoto perché initFlag=0
+    // index va da 0 a n-1, con n la lunghezza dei byte presi. Per ogni index avremo Misurazione_nloc = buf_i
+    // quando index = 0 e index = 1, gira a vuoto perché initFlag=0
     if (buf[index] == 0xAA && buf[index - 1] == 0xAA)
     {
       *nloc = 0;
@@ -228,7 +228,7 @@ int acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, int rebuildPa
     { // a questo punto abbiamo nloc=0 e i=2
 
       // parte dal terzo byte, dopo il primo di controllo. Ciò è determinato dall'ultimo if che controlla AA-AA.
-      misurazioni[*nloc] = buf[index]; // a partire dal terzo byte riempie il primo bit corrispondente a nloc=0
+      misurazioni[*nloc] = buf[index]; // a partire dal terzo byte di buf riempie il primo di misurazioni corrispondente a nloc=0
 
       if (*nloc == 1)
       {
