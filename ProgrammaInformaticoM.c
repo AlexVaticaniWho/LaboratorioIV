@@ -22,7 +22,7 @@ unsigned char buf[4096], misurazioni[4];
 double decodeTemperature(unsigned int rbuf);
 double decodeHumidity(unsigned int rbuf, double temperature_ref);
 double corrHumidity(double hum_val, unsigned int rbuf, double temperature_ref);
-int acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *f, int rebuildPackages);
+void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *f, int rebuildPackages);
 
 int main(int argc, char *argv[])
 {
@@ -181,7 +181,7 @@ double corrHumidity(double hum_val, unsigned int rbuf, double temperature_ref)
   return hum_val_corrected;
 }
 
-int acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, int rebuildPackages)
+void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, int rebuildPackages)
 {
   int InitFlag = 0, StartFlag, nhit, hit, trg = 0, nresto, index, k = 0;
   double val_temp, val_hum, val_hum_corr;
@@ -219,20 +219,19 @@ int acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, int rebuildPa
       }
     }
 
-    if (StartFlag == 1)
+    if (StartFlag == 1) // Questa condizione è verificata nel caso sia già terminato il processo di stampa di almeno un pacchetto intero
     {
       *nloc = *nloc - 5 * k;
     }
 
     if (InitFlag == 1)
-    { // a questo punto abbiamo nloc=0 e i=2
-
-      // parte dal terzo byte, dopo il primo di controllo. Ciò è determinato dall'ultimo if che controlla AA-AA.
+    { 
+      // a questo punto abbiamo nloc=0 e index=2
+      // parte dal terzo byte, dopo i primi due di controllo. Ciò è determinato dal primo if.
       misurazioni[*nloc] = buf[index]; // a partire dal terzo byte di buf riempie il primo di misurazioni corrispondente a nloc=0
 
       if (*nloc == 1)
       {
-
         /*OR bit a bit (restituisce un int) tra il primo byte traslato e il secondo;
         in questo modo mettiamo in sequenza i due byte di umidità relativa e li leggiamo
         come un unico valore binario*/
@@ -276,6 +275,5 @@ int acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, int rebuildPa
     // 0x sta per "la seguente è una cifra esadecimale" AA è il byte di controllo in esadecimale
     // cerchiamo due bytes di controllo AA consecutivi. è questo il comando che fa scorrere la i e comporta l'inizio dal terzo byte del primo if.
   }
-
-  return nresto;
+  lostedInfo = nresto;
 }
