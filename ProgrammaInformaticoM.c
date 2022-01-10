@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
   // Inizializzazione delle variabili tra cui le variabili di tempo. Le struct sono antenati degli oggetti: le prime due variabili sono istanze di struct.
 
   struct tm *gmp, *gmp_run;
-  struct timeval *utime, *utime_run;
+  struct timeval *utime, *utime_run; //tempo iniziale in microsecondi e tempo della run in microsecondi
   time_t t0, t, t0_usec, t_usec;
   int ty, tmon, tday, thour, tmin, tsec, time_acq_h_MAX;
   float time_acq_sec;
@@ -104,6 +104,9 @@ int main(int argc, char *argv[])
 
     t = time(NULL);
     gmp_run = gmtime(&t);
+
+    gettimeofday(&utime_run, NULL);
+    t_usec = gmp_run.tv_usec;
 
     if (gmp_run == NULL)
       printf("error on gmp_run");
