@@ -30,10 +30,11 @@ int main(int argc, char *argv[])
   // Inizializzazione delle variabili tra cui le variabili di tempo. Le struct sono antenati degli oggetti: le prime due variabili sono istanze di struct.
 
   struct tm *gmp, *gmp_run;
-  time_t t, t0;
+  struct timeval *utime, *utime_run;
+  time_t t0, t, t0_usec, t_usec;
   int ty, tmon, tday, thour, tmin, tsec, time_acq_h_MAX;
   float time_acq_sec;
-  int nloc, cport_nr = 17, bdrate = 115200;
+  int nloc, cport_nr = 17, bdrate = 115200, sleep_time = 400;
 
   FILE *file;
   FILE *currN; // file che salva il nome del file corrente affinch� possa essere usato da altri programmi
@@ -44,6 +45,9 @@ int main(int argc, char *argv[])
 
   t0 = time(NULL); // timer start
   gmp = gmtime(&t0);
+
+  gettimeofday(&utime, NULL);
+  t0_usec = utime.tv_usec;
 
   if (gmp == NULL)
   {
@@ -138,9 +142,9 @@ int main(int argc, char *argv[])
       printf("cnt %d received %i bytes \n", cnt, n);
       cnt++;
     }
-    
+
     #ifdef _WIN32
-        Sleep(400); // sospende temporaneamente il processo per 400ms
+        Sleep(sleep_time); // sospende temporaneamente il processo per sleep_time(ms)
     #else
         usleep(4000000);
     #endif
