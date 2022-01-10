@@ -191,7 +191,7 @@ double corrHumidity(double hum_val, unsigned int rbuf, double temperature_ref)
 
 void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, int rebuildPackages)
 {
-  int InitFlag = 0, StartFlag, nhit, hit, trg = 0, nresto, index, k = 0;
+  int InitFlag = 0, StartFlag, nhit, hit, trg = 0, nresto, i, k = 0;
   double val_temp, val_hum, val_hum_corr;
   unsigned int val_temp_int, val_hum_int;
 
@@ -203,17 +203,17 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, int rebuildP
 
   if (rebuildPackages || lostedInfo == 0)
   { // Caso in cui sto recuperando informazioni dalla precedente acquisizione
-    index = 0;
+    i = 0;
   }
   else
   {
     // Se lostedInfo è diverso da 0 allora nel for successivo inizio a ciclare da 6 - lostedinfo
-    index = 6 - lostedInfo;
+    i = 6 - lostedInfo;
   }
 
   StartFlag = 0;
 
-  for (index; index < n; index++)
+  for (int index = i; index < n; index++)
   {
     // index va da 0 a n-1, con n la lunghezza dei byte presi. Per ogni index avremo Misurazione_nloc = buf_i
     // quando index = 0 e index = 1, gira a vuoto perché initFlag=0
