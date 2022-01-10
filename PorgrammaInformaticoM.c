@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
   time_t t, t0;
   int ty, tmon, tday, thour, tmin, tsec, time_acq_h_MAX;
   float time_acq_sec;
-  int i, n, nloc, InitFlag, StartFlag, lostedInfo, nhit, hit, trg, cport_nr = 17, bdrate = 115200;
+  int i, n, nloc, InitFlag, StartFlag, lostedInfo, nhit, hit, trg, cport_nr = 17, bdrate = 115200, sleep_time = 400;
   int cnt = 0;
 
   FILE *file;
@@ -142,13 +142,12 @@ int main(int argc, char *argv[])
       printf("cnt %d received %i bytes \n", cnt, n);
       cnt++;
     }
-  }
-
-  #ifdef _WIN32
-    Sleep(400); // sospende temporaneamente il processo per 400ms
-  #else
-    usleep(4000000);
-  #endif
+    
+    #ifdef _WIN32
+      Sleep(sleep_time); // sospende temporaneamente il processo per 400ms
+    #else
+      usleep(4000000);
+    #endif
   }
 
   fclose(file);
