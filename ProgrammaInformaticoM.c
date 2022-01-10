@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
     // break;
   }
 
-  nloc = 0;
+  nloc = -1;
 
   while (1)
   { // itero per un numero infinito di volte (condizione sempre verificata)
