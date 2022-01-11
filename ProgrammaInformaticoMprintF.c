@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
   // Inizializzazione delle variabili tra cui le variabili di tempo. Le struct sono antenati degli oggetti: le prime due variabili sono istanze di struct.
 
   struct tm *gmp, *gmp_run;
-  //struct timeval *utime, *utime_run; //tempo iniziale in microsecondi e tempo della run in microsecondi
+  // struct timeval *utime, *utime_run; //tempo iniziale in microsecondi e tempo della run in microsecondi
   time_t t0, t, t0_usec, t_usec;
   int ty, tmon, tday, thour, tmin, tsec, time_acq_h_MAX;
   double time_acq_sec;
@@ -52,7 +52,6 @@ int main(int argc, char *argv[])
   if (gmp == NULL)
   {
     printf("error on gmp");
-    fflush(stdout);
     return 1;
   }
 
@@ -66,7 +65,6 @@ int main(int argc, char *argv[])
   if (argv[1] == NULL)
   {
     printf("format: read_rx Numero di ore di acquisizione \n");
-    fflush(stdout);
     return -1;
   }
 
@@ -75,7 +73,6 @@ int main(int argc, char *argv[])
     time_acq_h_MAX = atoi(argv[1]); // numero di ore massimo (int)
     sprintf(NameF, "sht75_nblab03_Hum_Temp_RUN_%04d%02d%02d%02d%02d%02d_%d_h.txt", ty, tmon, tday, thour, tmin, tsec, time_acq_h_MAX);
     printf("file_open %s --> durata in ore %d\n", NameF, time_acq_h_MAX);
-    fflush(stdout);
     file = fopen(NameF, "w+");
   }
 
@@ -91,7 +88,6 @@ int main(int argc, char *argv[])
   { // sottinteso if (RS232_OpenComport() =1) perchè open comport restituisce 1 in caso di errore
 
     printf("Can not open comport\n");
-    fflush(stdout);
     return (0);
   }
 
@@ -110,58 +106,55 @@ int main(int argc, char *argv[])
     /*gettimeofday(&utime_run, NULL);
     t_usec = gmp_run->tv_usec;*/
 
-    if (gmp_run == NULL) {
+    if (gmp_run == NULL)
+    {
       printf("error on gmp_run");
-      fflush(stdout);
     }
     else
     {
       printf("Number of packets received: %d ", n);
-      fflush(stdout);
 
       time_acq_sec = difftime(t, t0); // Tempo trascorso dall'inzio della presa dati
 
       printf("Time elapsed: %f (sec) \n", time_acq_sec);
-      fflush(stdout);
 
       if (time_acq_sec > time_acq_h_MAX * 3600)
       {
 
         printf("Time_duration RUN in minutes > %d \n", time_acq_h_MAX * 60);
-        fflush(stdout);
+
         break;
       }
 
       else if (cnt % 100 == 0)
       { // cambia alla fine del while(1)
         printf("Time current in hour %f \n", time_acq_sec / 3600.);
-        fflush(stdout);
       }
 
       /***********acquisizione dati*************/
       if (n > 0)
       {
-        nloc ++;
+        nloc++;
 
         if (lostedInfo > 0)
         { // Caso in cui devo ricostruire il pacchetto
-          printf("Starting rebuilding packages!");
-          fflush(stdout);
+          printf("Starting rebuilding packages! \n");
+
           acquisizione(6 - lostedInfo, &nloc, gmp_run, file, 1);
         }
         acquisizione(n, &nloc, gmp_run, file, 0);
       }
 
       printf("Bytes received: %i\n", n);
-      fflush(stdout);
+
       cnt++;
     }
 
-    #ifdef _WIN32
-        Sleep(sleep_time); // sospende temporaneamente il processo per sleep_time(ms)
-    #else
-        usleep(4000000);
-    #endif
+#ifdef _WIN32
+    Sleep(sleep_time); // sospende temporaneamente il processo per sleep_time(ms)
+#else
+    usleep(4000000);
+#endif
   }
   fclose(file);
 
@@ -201,10 +194,8 @@ double corrHumidity(double hum_val, unsigned int rbuf, double temperature_ref)
 }
 
 void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, int rebuildPackages)
-{ 
-  printf("Acquiring data...");
-  fflush(stdout);
-  int InitFlag = 0, StartFlag, nhit, hit, trg = 0, nresto, i, k = 0;
+{
+  printf("Acquiring data... \n") int InitFlag = 0, StartFlag, nhit, hit, trg = 0, nresto, i, k = 0;
   double val_temp, val_hum, val_hum_corr;
   unsigned int val_temp_int, val_hum_int;
 
@@ -212,10 +203,9 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, int rebuildP
   nhit = n / 6; // numero di pacchetti di dati (due bytes di controllo, due di RH e due di T)
   hit = 0;
   nresto = n % 6;
-  printf("nhit %d \n", nhit);
-  fflush(stdout);
+  printf("nhit %d \n", nhit)
 
-  if (rebuildPackages || lostedInfo == 0)
+      if (rebuildPackages || lostedInfo == 0)
   { // Caso in cui sto recuperando informazioni dalla precedente acquisizione
     i = 0;
   }
@@ -248,7 +238,7 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, int rebuildP
     }
 
     if (InitFlag == 1)
-    { 
+    {
       // a questo punto abbiamo nloc=0 e index=2
       // parte dal terzo byte, dopo i primi due di controllo. Ciò è determinato dal primo if.
       misurazioni[*nloc] = buf[index]; // a partire dal terzo byte di buf riempie il primo di misurazioni corrispondente a nloc=0
@@ -276,9 +266,8 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, int rebuildP
         if (cnt % 100 == 0)
         {
           printf(" read_Hum MSB %x - LSB %x --> Hum16bitRaw  %x - HumReco %.2f (dec)\n", misurazioni[0], misurazioni[1], val_hum_int, val_hum_corr);
-          fflush(stdout);
+
           printf(" read Temp MSB %x - LSB %x --> Temp16bitRaw %x - TempReco %.2f (dec)\n", misurazioni[2], misurazioni[3], val_temp_int, val_temp);
-          fflush(stdout);
         }
 
         fprintf(file, "%d\t%d\t%d\t%d\t%.1f\t", trg, gmp_run->tm_year + 1900, gmp_run->tm_mon + 1, gmp_run->tm_mday, 3600 * gmp_run->tm_hour + 60 * gmp_run->tm_min + gmp_run->tm_sec + (double)hit * 4 / (double)nhit);
@@ -289,7 +278,7 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, int rebuildP
       else if (*nloc > 5)
       {
         printf(" more than expected \n");
-        fflush(stdout);
+
         StartFlag = 1;
         k++;
       }
