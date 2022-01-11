@@ -256,6 +256,8 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, FILE *data, 
         val_hum_int = (misurazioni[0] << 8) | (misurazioni[1]);
         val_hum = decodeHumidity(val_hum_int);
 
+        printf("\n val_hum = %.2f and nloc = %d \n", val_hum, *nloc);
+
         trg++;
         hit++;
       }
@@ -263,6 +265,7 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, FILE *data, 
       else if (*nloc == 3)
       {
 
+        printf("Pacchetto %d\n%3x%3x\n%3x%3x\n%3x%3x\n\n", trg, buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]);
         // Stesso processo logico eseguito per l'umidità
         val_temp_int = (misurazioni[2] << 8) | (misurazioni[3]);
         val_temp = decodeTemperature(val_temp_int);
@@ -274,7 +277,7 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, FILE *data, 
           printf(" read Temp MSB %x - LSB %x --> Temp16bitRaw %x - TempReco %.2f (dec)\n", misurazioni[2], misurazioni[3], val_temp_int, val_temp);
 
         }
-
+        
         fprintf(file, "%d\t%d\t%d\t%d\t%.1f\t", trg, gmp_run->tm_year + 1900, gmp_run->tm_mon + 1, gmp_run->tm_mday, 3600 * gmp_run->tm_hour + 60 * gmp_run->tm_min + gmp_run->tm_sec + (double)hit * 4 / (double)nhit);
         fprintf(file, "\t%d\t%.2f\t", val_hum_int, val_hum_corr);
         fprintf(file, "%d\t%.2f\n", val_temp_int, val_temp);
@@ -290,6 +293,8 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, FILE *data, 
         k++;
       }
     }
+
+    printf("\n nloc prima di nloc++ = %d",  *nloc);
 
     (*nloc)++; // faccio crescere ad ogni iterazione nloc che tiene conto delle coppie di bytes acquisite
 
