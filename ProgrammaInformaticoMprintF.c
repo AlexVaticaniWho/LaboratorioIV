@@ -285,7 +285,7 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, int rebuildP
       }
     }
 
-    *nloc++; // faccio crescere ad ogni iterazione nloc che tiene conto delle coppie di bytes acquisite
+    (*nloc)++; // faccio crescere ad ogni iterazione nloc che tiene conto delle coppie di bytes acquisite
 
     //&& se entrambi gli operatori sono diversi da zero (veri) � una condizione vera
     // 0x sta per "la seguente è una cifra esadecimale" AA è il byte di controllo in esadecimale
