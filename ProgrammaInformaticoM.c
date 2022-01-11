@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
   int nloc, cport_nr = 17, bdrate = 115200, sleep_time = 400;
 
   FILE *file;
+  FILE *datiraw;
   FILE *currN; // file che salva il nome del file corrente affinch� possa essere usato da altri programmi
 
   char NameF[100];
@@ -105,8 +106,8 @@ int main(int argc, char *argv[])
     t = time(NULL);
     gmp_run = gmtime(&t);
 
-    gettimeofday(&utime_run, NULL);
-    t_usec = gmp_run.tv_usec;
+    // gettimeofday(&utime_run, NULL);
+    // t_usec = gmp_run.tv_usec;
 
     if (gmp_run == NULL)
       printf("error on gmp_run");
@@ -213,7 +214,7 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, int rebuildP
 
   StartFlag = 0;
 
-  for (int index = i; index < n; index++)
+  for (int index =; index < n; index++)
   {
     // index va da 0 a n-1, con n la lunghezza dei byte presi. Per ogni index avremo Misurazione_nloc = buf_i
     // quando index = 0 e index = 1, gira a vuoto perché initFlag=0
