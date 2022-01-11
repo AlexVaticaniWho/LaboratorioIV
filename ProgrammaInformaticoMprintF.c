@@ -20,7 +20,7 @@ unsigned char buf[4096], misurazioni[4];
 // Funzioni per la decodifica e l'applicazione delle correzioni all'umidità
 
 double decodeTemperature(unsigned int rbuf);
-double decodeHumidity(unsigned int rbuf, double temperature_ref);
+double decodeHumidity(unsigned int rbuf);
 double corrHumidity(double hum_val, unsigned int rbuf, double temperature_ref);
 void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, FILE *data,  int rebuildPackages);
 
@@ -173,7 +173,7 @@ double decodeTemperature(unsigned int rbuf)
   return d1 + d2 * rd_val;
 }
 
-double decodeHumidity(unsigned int rbuf, double temperature_ref)
+double decodeHumidity(unsigned int rbuf)
 {
   double c1, c2, c3, rd_val, hum_val;
   c1 = -2.0468;
@@ -229,6 +229,7 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, FILE *data, 
     if (buf[index] == 0xAA && buf[index - 1] == 0xAA)
     {
       *nloc = 0;
+      printf( "\n buf[0] = %x and buf[1] = %x \n", buf[index], buf[index-1]);
 
       if (InitFlag == 0)
       {
@@ -253,7 +254,7 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, FILE *data, 
         in questo modo mettiamo in sequenza i due byte di umidità relativa e li leggiamo
         come un unico valore binario*/
         val_hum_int = (misurazioni[0] << 8) | (misurazioni[1]);
-        val_hum = decodeHumidity(val_hum_int, val_temp);
+        val_hum = decodeHumidity(val_hum_int);
 
         trg++;
         hit++;
