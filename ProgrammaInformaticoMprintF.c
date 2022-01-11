@@ -195,7 +195,8 @@ double corrHumidity(double hum_val, unsigned int rbuf, double temperature_ref)
 
 void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, int rebuildPackages)
 {
-  printf("Acquiring data... \n") int InitFlag = 0, StartFlag, nhit, hit, trg = 0, nresto, i, k = 0;
+  printf("Acquiring data... \n"); 
+  int InitFlag = 0, StartFlag, nhit, hit, trg = 0, nresto, i, k = 0;
   double val_temp, val_hum, val_hum_corr;
   unsigned int val_temp_int, val_hum_int;
 
@@ -203,17 +204,17 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, int rebuildP
   nhit = n / 6; // numero di pacchetti di dati (due bytes di controllo, due di RH e due di T)
   hit = 0;
   nresto = n % 6;
-  printf("nhit %d \n", nhit)
+  printf("nhit %d \n", nhit);
 
       if (rebuildPackages || lostedInfo == 0)
-  { // Caso in cui sto recuperando informazioni dalla precedente acquisizione
-    i = 0;
-  }
-  else
-  {
-    // Se lostedInfo è diverso da 0 allora nel for successivo inizio a ciclare da 6 - lostedinfo
-    i = 6 - lostedInfo;
-  }
+      { // Caso in cui sto recuperando informazioni dalla precedente acquisizione
+        i = 0;
+      }
+      else
+      {
+        // Se lostedInfo è diverso da 0 allora nel for successivo inizio a ciclare da 6 - lostedinfo
+        i = 6 - lostedInfo;
+      }
 
   StartFlag = 0;
 
