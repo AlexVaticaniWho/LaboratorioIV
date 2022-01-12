@@ -225,8 +225,6 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, FILE *data, 
   int index;
   for (index = i; index < n; index++)
   {
-    printf("\n i prima di AA-AA = %d \n  buf[%d] = %3x ", index, index, buf[index]);
-
     // index va da 0 a n-1, con n la lunghezza dei byte presi. Per ogni index avremo Misurazione_nloc = buf_i
     // quando index = 0 e index = 1, gira a vuoto perché initFlag=0
     /* va richiesto index > 0 perché altrimenti viene valutato anche l'elemento buf[-1] che, per qualche motivo, non da errore di segmentazione ma
@@ -298,6 +296,7 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, FILE *data, 
     if (index > 0 && buf[index] == 0xAA && buf[index - 1] == 0xAA)
     {
       *nloc = 0;
+      index = 2;
       printf("\n i prima InitFlag = %d \n", index);
       if (InitFlag == 0)
       {
