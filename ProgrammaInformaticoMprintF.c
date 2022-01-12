@@ -22,7 +22,7 @@ unsigned char buf[4096], misurazioni[4];
 double decodeTemperature(unsigned int rbuf);
 double decodeHumidity(unsigned int rbuf);
 double corrHumidity(double hum_val, unsigned int rbuf, double temperature_ref);
-void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, FILE *data,  int rebuildPackages);
+void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, FILE *data, int rebuildPackages);
 
 int main(int argc, char *argv[])
 {
@@ -136,32 +136,33 @@ int main(int argc, char *argv[])
       /***********acquisizione dati*************/
       if (n > 0)
       {
-        nloc++;
+        //nloc++;
 
-        if (lostedInfo > 0)
-        { // Caso in cui devo ricostruire il pacchetto
-          printf("Starting rebuilding packages! \n");
+        // if (lostedInfo > 0)
+        // {
+        //   // Caso in cui devo ricostruire il pacchetto
+        //   printf("Starting rebuilding packages! \n");
 
-          acquisizione(6 - lostedInfo, &nloc, gmp_run, file, datiraw, 1);
-        }
+        //   acquisizione(6 - lostedInfo, &nloc, gmp_run, file, datiraw, 1);
+        // }
         acquisizione(n, &nloc, gmp_run, file, datiraw, 0);
+
+        printf("Bytes received: %i\n", n);
+
+        cnt++;
       }
-
-      printf("Bytes received: %i\n", n);
-
-      cnt++;
     }
 
-    #ifdef _WIN32
-        Sleep(sleep_time); // sospende temporaneamente il processo per sleep_time(ms)
-    #else
-        usleep(sleep_time * 1000);
-    #endif
-      }
-      fclose(file);
-      fclose(datiraw);
+#ifdef _WIN32
+    Sleep(sleep_time); // sospende temporaneamente il processo per sleep_time(ms)
+#else
+    usleep(sleep_time * 1000);
+#endif
+  }
+  fclose(file);
+  fclose(datiraw);
 
-      return (0);
+  return (0);
 }
 
 double decodeTemperature(unsigned int rbuf)
@@ -198,7 +199,7 @@ double corrHumidity(double hum_val, unsigned int rbuf, double temperature_ref)
 
 void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, FILE *data, int rebuildPackages)
 {
-  printf("Acquiring data... \n"); 
+  printf("Acquiring data... \n");
   int InitFlag = 0, StartFlag, nhit, hit, trg = 0, nresto, i, k = 0;
   double val_temp, val_hum, val_hum_corr;
   unsigned int val_temp_int, val_hum_int;
@@ -209,33 +210,27 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, FILE *data, 
   nresto = n % 6;
   printf("nhit %d \n", nhit);
 
-      if (rebuildPackages || lostedInfo == 0)
-      { // Caso in cui sto recuperando informazioni dalla precedente acquisizione
-        i = 0;
-      }
-      else
-      {
-        // Se lostedInfo è diverso da 0 allora nel for successivo inizio a ciclare da 6 - lostedinfo
-        i = 6 - lostedInfo;
-      }
+  if (rebuildPackages || lostedInfo == 0)
+  { // Caso in cui sto recuperando informazioni dalla precedente acquisizione
+    i = 0;
+  }
+  else
+  {
+    // Se lostedInfo è diverso da 0 allora nel for successivo inizio a ciclare da 6 - lostedinfo
+    i = 6 - lostedInfo;
+  }
 
   StartFlag = 0;
 
   int index;
   for (index = i; index < n; index++)
   {
+    printf("\n i prima di AA-AA = %d \n  buf[%d] = %3x ", index, index, buf[index]);
+
     // index va da 0 a n-1, con n la lunghezza dei byte presi. Per ogni index avremo Misurazione_nloc = buf_i
     // quando index = 0 e index = 1, gira a vuoto perché initFlag=0
-    if (buf[index] == 0xAA && buf[index - 1] == 0xAA)
-    {
-      *nloc = 0;
-      printf( "\n buf[0] = %x and buf[1] = %x \n", buf[index], buf[index-1]);
-
-      if (InitFlag == 0)
-      {
-        InitFlag = 1;
-      }
-    }
+    /* va richiesto index > 0 perché altrimenti viene valutato anche l'elemento buf[-1] che, per qualche motivo, non da errore di segmentazione ma
+    crea evidenti problemi nella scrittura del pacchetto*/
 
     if (StartFlag == 1) // Questa condizione è verificata nel caso sia già terminato il processo di stampa di almeno un pacchetto intero
     {
@@ -247,6 +242,8 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, FILE *data, 
       // a questo punto abbiamo nloc=0 e index=2
       // parte dal terzo byte, dopo i primi due di controllo. Ciò è determinato dal primo if.
       misurazioni[*nloc] = buf[index]; // a partire dal terzo byte di buf riempie il primo di misurazioni corrispondente a nloc=0
+      printf("\n nloc = %d \n i = %d \n", *nloc, index);
+      fflush(stdout);
 
       if (*nloc == 1)
       {
@@ -264,25 +261,24 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, FILE *data, 
 
       else if (*nloc == 3)
       {
-
-        printf("Pacchetto %d\n%3x%3x\n%3x%3x\n%3x%3x\n\n", trg, buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]);
         // Stesso processo logico eseguito per l'umidità
         val_temp_int = (misurazioni[2] << 8) | (misurazioni[3]);
         val_temp = decodeTemperature(val_temp_int);
         val_hum_corr = corrHumidity(val_hum, val_hum_int, val_temp);
-
+        printf("Pacchetto %d\n%3x%3x\n%3x%3x\n%3x%3x\n\n", trg, buf[index - 1], buf[index], buf[index + 1], buf[index + 2], buf[index + 3], buf[index + 4]);
+        fflush(stdout);
         if (cnt % 100 == 0)
         {
           printf(" read_Hum MSB %x - LSB %x --> Hum16bitRaw  %x - HumReco %.2f (dec)\n", misurazioni[0], misurazioni[1], val_hum_int, val_hum_corr);
           printf(" read Temp MSB %x - LSB %x --> Temp16bitRaw %x - TempReco %.2f (dec)\n", misurazioni[2], misurazioni[3], val_temp_int, val_temp);
-
         }
-        
+
         fprintf(file, "%d\t%d\t%d\t%d\t%.1f\t", trg, gmp_run->tm_year + 1900, gmp_run->tm_mon + 1, gmp_run->tm_mday, 3600 * gmp_run->tm_hour + 60 * gmp_run->tm_min + gmp_run->tm_sec + (double)hit * 4 / (double)nhit);
         fprintf(file, "\t%d\t%.2f\t", val_hum_int, val_hum_corr);
         fprintf(file, "%d\t%.2f\n", val_temp_int, val_temp);
-        fprintf(data, "Pacchetto %d\n%3x%3x\n%3x%3x\n%3x%3x\n\n", trg, buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]);
-        fflush(stdout);
+        fprintf(data, "Pacchetto %d\n%3x%3x\n%3x%3x\n%3x%3x\n\n", trg, buf[index - 1], buf[index], buf[index + 1], buf[index + 2], buf[index + 3], buf[index + 4]);
+        fflush(file);
+        fflush(data);
       }
 
       else if (*nloc > 5)
@@ -294,13 +290,22 @@ void acquisizione(int n, int *nloc, struct tm *gmp_run, FILE *file, FILE *data, 
       }
     }
 
-    printf("\n nloc prima di nloc++ = %d",  *nloc);
-
     (*nloc)++; // faccio crescere ad ogni iterazione nloc che tiene conto delle coppie di bytes acquisite
-
-    //&& se entrambi gli operatori sono diversi da zero (veri) � una condizione vera
+    
+    //&& se entrambi gli operatori sono diversi da zero (veri) è una condizione vera
     // 0x sta per "la seguente è una cifra esadecimale" AA è il byte di controllo in esadecimale
     // cerchiamo due bytes di controllo AA consecutivi. è questo il comando che fa scorrere la i e comporta l'inizio dal terzo byte del primo if.
+    if (index > 0 && buf[index] == 0xAA && buf[index - 1] == 0xAA)
+    {
+      *nloc = 0;
+      printf("\n i prima InitFlag = %d \n", index);
+      if (InitFlag == 0)
+      {
+        InitFlag = 1;
+        printf("\n i dopo InitFlag = %d \n", index);
+      }
+    }
+    
   }
   lostedInfo = nresto;
 }
