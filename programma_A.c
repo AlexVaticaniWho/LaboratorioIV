@@ -111,6 +111,8 @@ int main(int argc, char *argv[]) {
     t = time(NULL);
     gmp_run = gmtime(&t);
     gettimeofday(&t_usecond, NULL);
+
+
     if (gmp_run == NULL)
       printf("error on gmp_run");
     else {
@@ -173,7 +175,7 @@ int main(int argc, char *argv[]) {
                 printf(" read Temp MSB %x - LSB %x --> Temp16bitRaw %x - TempReco %.2f (dec)\n", sht75_nblab03_frame[2], sht75_nblab03_frame[3], val_temp_int, val_temp);
               }
 
-              fprintf(file, "%d\t%d\t%d\t%d\t%.1f\t", trg, gm.tm_year + 1900, gm.tm_mon + 1, gm.tm_mday, 3600 * gm.tm_hour + 60 * gm.tm_min + gm.tm_sec + (double)hit * 4 / (double)nhit);
+              fprintf(file, "%d\t%d\t%d\t%d\t%.1f\t%f", trg, gmp->tm_year + 1900, gmp->tm_mon + 1, gmp->tm_mday, 3600 * gmp->tm_hour + 60 * gmp->tm_min + gmp->tm_sec + (double)hit * 4 / (double)nhit), time_diff(t0_usecond, t_usecond);
               fprintf(file, "\t%d\t%.2f\t", val_hum_int, val_hum_corr);
               fprintf(file, "%d\t%.2f\n", val_temp_int, val_temp);
             }
@@ -252,6 +254,6 @@ double corrHumidity(double hum_val, unsigned int rbuf, double temperature_ref)
 
 float time_diff(struct timeval *t0_usecond, struct timeval *t_usecond)
 {
-    return (end->tv_sec - start->tv_sec) + 1e-6*(end->tv_usec - start->tv_usec);
+    return 1e-6*(t_usecond->tv_usec - t0_usecond->tv_usec);
 }
 
