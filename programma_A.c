@@ -143,7 +143,6 @@ int main(int argc, char *argv[]) {
 
         for (i = 0; i < n; i++) {
           
-          int flag = -1;
 
           if (InitFlag == 1) {
             
@@ -175,7 +174,7 @@ int main(int argc, char *argv[]) {
                 printf(" read Temp MSB %x - LSB %x --> Temp16bitRaw %x - TempReco %.2f (dec)\n", sht75_nblab03_frame[2], sht75_nblab03_frame[3], val_temp_int, val_temp);
               }
 
-              fprintf(file, "%d\t%d\t%d\t%d\t%.1f\t%f", trg, gmp->tm_year + 1900, gmp->tm_mon + 1, gmp->tm_mday, 3600 * gmp->tm_hour + 60 * gmp->tm_min + gmp->tm_sec + (double)hit * 4 / (double)nhit), time_diff(t0_usecond, t_usecond);
+              fprintf(file, "%d\t%d\t%d\t%d\t%.1f\t%.1f", trg, gmp->tm_year + 1900, gmp->tm_mon + 1, gmp->tm_mday, 3600 * gmp->tm_hour + 60 * gmp->tm_min + gmp->tm_sec + (double)hit * 4 / (double)nhit), time_diff(t0_usecond, t_usecond);
               fprintf(file, "\t%d\t%.2f\t", val_hum_int, val_hum_corr);
               fprintf(file, "%d\t%.2f\n", val_temp_int, val_temp);
             }
@@ -193,10 +192,6 @@ int main(int argc, char *argv[]) {
           if (i > 0 && buf[i] == 0xAA && buf[i - 1] == 0xAA) {          
             StartFlag = 1;
             nloc = 0;
-            flag ++;
-            gettimeofday(&time_usecond, NULL);
-            long long int time_acc = ((time_usecond.tv_sec - timeStart) * 1000000) + time_usecond.tv_usec;
-            fprintf(file, "\n Il pacchetto %d è stato acquisito all'istante: %lld \n", nhit, time_acc +  (1 + (flag * sleep_time * 1000) / nhit));
 
             if (InitFlag == 0) {
               InitFlag = 1;
@@ -254,6 +249,6 @@ double corrHumidity(double hum_val, unsigned int rbuf, double temperature_ref)
 
 float time_diff(struct timeval *t0_usecond, struct timeval *t_usecond)
 {
-    return 1e-6*(t_usecond->tv_usec - t0_usecond->tv_usec);
+    return 1e-3*(t_usecond->tv_usec - t0_usecond->tv_usec);
 }
 
