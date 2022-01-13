@@ -22,6 +22,8 @@ compile with the command: gcc read_rx.c rs232.c -Wall -Wextra -o2 -o read_rx
 double decodeTemperature(unsigned int rbuf);
 double decodeHumidity(unsigned int rbuf);
 double corrHumidity(double hum_val, unsigned int rbuf, double temperature_ref);
+float time_diff(struct timeval *t0_usecond, struct timeval *t_usecond)
+
 
 int main(int argc, char *argv[]) {
 
@@ -35,7 +37,7 @@ int main(int argc, char *argv[]) {
   int i, n, nloc, InitFlag, StartFlag, nhit, hit, trg, cport_nr = 17, bdrate = 115200, sleep_time = 400;
   int cnt = 0;
 
-  struct timeval time_usecond;
+  struct timeval t0_usecond, t_usecond;
 
   FILE *file;
   FILE *currN; // file che salva il nome del file corrente affinch� possa essere usato da altri programmi
@@ -55,17 +57,14 @@ int main(int argc, char *argv[]) {
     return;
   }
 
-  gettimeofday(&time_usecond, NULL);
-  long long int startingTime = time_usecond.tv_sec;
+  gettimeofday(&t0_usecond, NULL);
 
-  gm = *gmp;
-
-  ty = gm.tm_year + 1900;
-  tmon = gm.tm_mon + 1;
-  tday = gm.tm_mday;
-  thour = gm.tm_hour + 1;
-  tmin = gm.tm_min;
-  tsec = gm.tm_sec;
+  ty = gmp->tm_year + 1900;
+  tmon = gmp->tm_mon + 1;
+  tday = gmp->tm_mday;
+  thour = gmp->tm_hour + 1;
+  tmin = gmp->tm_min;
+  tsec = gmp->tm_sec;
 
   if (argv[1] == NULL) {
 
@@ -111,24 +110,24 @@ int main(int argc, char *argv[]) {
 
     t = time(NULL);
     gmp_run = gmtime(&t);
+    gettimeofday(&t_usecond, NULL);
     if (gmp_run == NULL)
       printf("error on gmp_run");
     else {
       printf("%d %d ", cnt, n);
 
-      gm = *gmp_run;
       time_acq_sec = (t - t0); // Tempo trascorso dall'inzio della presa dati
 
-      printf(" time elapsed: %f (sec) \n",time_acq_sec);
+      printf("Time elapsed: %f (sec) \n",time_acq_sec);
 
       if (time_acq_sec > time_acq_h_MAX * 3600) {
 
-        printf(" time_duration RUN in minutes > %d \n", time_acq_h_MAX * 60);
+        printf("Time duration RUN in minutes > %d \n", time_acq_h_MAX * 60);
         break;
       }
 
       else if (cnt % 100 == 0) {// cambia alla fine del while(1)
-          printf(" time current in hour %f \n", time_acq_sec / 3600.);
+          printf("Time current in hour %f \n", time_acq_sec / 3600.);
       }
 
       /***********acquisizione dati*************/
@@ -249,5 +248,10 @@ double corrHumidity(double hum_val, unsigned int rbuf, double temperature_ref)
   rd_val = (double)rbuf;
   hum_val_corrected = (temperature_ref - 25) * (t1 + t2 * rd_val) + hum_val;
   return hum_val_corrected;
+}
+
+float time_diff(struct timeval *t0_usecond, struct timeval *t_usecond)
+{
+    return (end->tv_sec - start->tv_sec) + 1e-6*(end->tv_usec - start->tv_usec);
 }
 
