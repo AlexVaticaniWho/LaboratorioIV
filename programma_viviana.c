@@ -20,7 +20,7 @@ compile with the command: gcc read_rx.c rs232.c -Wall -Wextra -o2 -o read_rx
 // Funzioni per la decodifica e l'applicazione delle correzioni all'umidità
 
 double decodeTemperature(unsigned int rbuf);
-double decodeHumidity(unsigned int rbuf, double temperature_ref);
+double decodeHumidity(unsigned int rbuf);
 double corrHumidity(double hum_val, unsigned int rbuf, double temperature_ref);
 
 int main(int argc, char *argv[]) {
@@ -156,7 +156,7 @@ int main(int argc, char *argv[]) {
               in questo modo mettiamo in sequenza i due byte di umidità relativa e li leggiamo
               come un unico valore binario*/
               val_hum_int = (sht75_nblab03_frame[0] << 8) | (sht75_nblab03_frame[1]);
-              val_hum = decodeHumidity(val_hum_int, val_temp);
+              val_hum = decodeHumidity(val_hum_int);
 
               trg++;
               hit++;
@@ -228,7 +228,7 @@ double decodeTemperature(unsigned int rbuf)
   return d1 + d2 * rd_val;
 }
 
-double decodeHumidity(unsigned int rbuf, double temperature_ref)
+double decodeHumidity(unsigned int rbuf)
 {
   double c1, c2, c3, rd_val, hum_val;
   c1 = -2.0468;
