@@ -21,25 +21,24 @@ compile with the command: gcc read_rx.c rs232.c -Wall -Wextra -o2 -o read_rx
 double decodeTemperature(unsigned int rbuf);
 double decodeHumidity(unsigned int rbuf, double temperature_ref);
 double corrHumidity(double hum_val, unsigned int rbuf, double temperature_ref);
+void time_diff(struct timeval t_start, struct timeval t_end, struct timeval *td);
 
 int main(int argc, char *argv[]){
 
-    //inizializzo
-    struct tm *gmp;
-    struct tm gm; 
-    time_t t, t0;
-    int ty, tmon, tday, thour, tmin, tsec, time_acq_h_MAX;
-    float time_acq_h;
-    int i, n, nloc, InitFlag, StartFlag, nhit, hit, trg,
-    cport_nr=17,                                                   
-    bdrate=115200;  
+  //inizializzo
+  struct tm *gmp;
+  struct timeval start, end, diff_time; 
+  time_t t, t0;
+  int ty, tmon, tday, thour, tmin, tsec, time_acq_h_MAX;
+  float time_acq_h;
+  int i, n, nloc, InitFlag, StartFlag, nhit, hit, trg, cport_nr=17, bdrate=115200;  
 
   int cnt=0;
   FILE *file;
   FILE *currN; //file che salva il nome del file corrente affinch� possa essere usato da altri programmi
+  
   double val_temp, val_hum, val_hum_corr;
-  unsigned char buf[4096],sht75_nblab03_frame[4]; //buf � un vettore di 4096 byte (char) organizzati in char 
-                                                 //sht75_nblab03_frame � un array di 4 bytes (char)
+  unsigned char buf[4096],sht75_nblab03_frame[4]; //buf � un vettore di 4096 byte (char) organizzati in char //sht75_nblab03_frame � un array di 4 bytes (char)
   unsigned int val_temp_int, val_hum_int;
   char NameF[100];
 
@@ -47,40 +46,39 @@ int main(int argc, char *argv[]){
  
   t0 = time(NULL);  // timer start
   gmp = gmtime(&t0);
-    if (gmp == NULL)
-      printf("error on gmp");
+  
+  if (gmp == NULL) printf("error on gmp");   
 
-   gm = *gmp;   
-
-  ty=gm.tm_year+1900; 
-  tmon=gm.tm_mon+1;
-  tday=gm.tm_mday;
-  thour=gm.tm_hour+1;
-  tmin=gm.tm_min;
-  tsec=gm.tm_sec;
+  ty = gmp->tm_year+1900; 
+  tmon = gmp->tm_mon+1;
+  tday = gmp->tm_mday;
+  thour = gmp->tm_hour+1;
+  tmin = gmp->tm_min;
+  tsec = gmp->tm_sec;
 
   if (argv[1] == NULL)
-       {
-	     printf("format: read_rx Numero di ore di acquisizione \n");
-             return -1;
-       }	
-   else
-       { 
-            time_acq_h_MAX = atoi(argv[1]); //numero di ore massimo (int)
-            sprintf(NameF,"sht75_nblab03_Hum_Temp_RUN_%04d%02d%02d%02d%02d%02d_%d_h.txt",ty,tmon,tday,thour,tmin,tsec,time_acq_h_MAX);
-            printf("file_open %s --> durata in ore %d\n",NameF,time_acq_h_MAX);
-            file = fopen(NameF, "w+" );
-       }
+  {
+    printf("format: read_rx Numero di ore di acquisizione \n");
+    return -1;
+  }	
+   
+  else
+  { 
+    time_acq_h_MAX = atoi(argv[1]); //numero di ore massimo (int)
+    sprintf(NameF,"sht75_nblab03_Hum_Temp_RUN_%04d%02d%02d%02d%02d%02d_%d_h.txt",ty,tmon,tday,thour,tmin,tsec,time_acq_h_MAX);
+    printf("file_open %s --> durata in ore %d\n",NameF,time_acq_h_MAX);
+    file = fopen(NameF, "w+" );
+  }
 
-       /***scrivo il nome del file nel file nome corrente affinch� possa essere usato da programmi esterni***/
-       
-        currN = fopen("currN.txt", "w");
-        fprintf(currN, NameF);
-        fclose (currN);
+  /***scrivo il nome del file nel file nome corrente affinch� possa essere usato da programmi esterni***/
+  
+  currN = fopen("currN.txt", "w");
+  fprintf(currN, NameF);
+  fclose (currN);
         
 
   
-   /***********se ci sono problemi****************/
+  /***********se ci sono problemi****************/
    
   if(RS232_OpenComport(cport_nr, bdrate, mode)) //sottinteso if (RS232_OpenComport() =1) perch� open comport restituisce 1 in caso di errore
   {
@@ -215,30 +213,38 @@ int main(int argc, char *argv[]){
 
 
 double decodeTemperature(unsigned int rbuf) {
-double d1, d2, rd_val;
-d1=-39.6;
-d2=0.01;
-rd_val=(double)rbuf + 0.;
+  double d1, d2, rd_val;
+  d1=-39.6;
+  d2=0.01;
+  rd_val=(double)rbuf + 0.;
  return d1+d2*rd_val ;
- }
+}
 
 double decodeHumidity(unsigned int rbuf, double temperature_ref){
-double c1, c2, c3, rd_val, hum_val;
-c1=-2.0468;
-c2=0.0367;
-c3=-1.5955e-6;
-
-rd_val=(double)rbuf;
-hum_val=c1+c2*rd_val+c3*(rd_val)*(rd_val);
-
+  double c1, c2, c3, rd_val, hum_val;
+  c1=-2.0468;
+  c2=0.0367;
+  c3=-1.5955e-6;
+  rd_val=(double)rbuf;
+  hum_val=c1+c2*rd_val+c3*(rd_val)*(rd_val);
  return hum_val ;  
 }
 
 double corrHumidity(double hum_val, unsigned int rbuf, double temperature_ref){
 	double t1, t2, rd_val, hum_val_corrected;
 	t1=0.01;
-    t2=0.00008;
-    rd_val=(double)rbuf;
-    hum_val_corrected=(temperature_ref-25)*(t1+t2*rd_val)+hum_val;
+  t2=0.00008;
+  rd_val=(double)rbuf;
+  hum_val_corrected=(temperature_ref-25)*(t1+t2*rd_val)+hum_val;
 	return hum_val_corrected ;  
+}
+
+void time_diff(struct timeval t_start, struct timeval t_end, struct timeval *td) {
+  td->tv_usec = t_end.tv_usec - t_start.tv_usec;
+  td->tv_sec =  t_end.tv_sec - t_start.tv_sec;
+
+  if (td->tv_sec > 0 && td->tv_usec < 0) {
+      td->tv_usec += NUM;
+      td->tv_sec--;
+  }
 }
