@@ -210,7 +210,7 @@ int main(int argc, char *argv[]) {
     #ifdef _WIN32
       Sleep(sleep_time); // sospende temporaneamente il processo per il tempo prescelto in ms
     #else
-      usleep(4000000);
+      usleep(sleep_time * 100);
     #endif
   }
 
