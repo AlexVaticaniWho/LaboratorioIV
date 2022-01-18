@@ -25,9 +25,7 @@ double corrHumidity(double hum_val, unsigned int rbuf, double temperature_ref);
 
 int main(int argc, char *argv[])
 {
-
-  // Inizializzazione delle variabili tra cui le variabili di tempo. Le struct sono antenati degli oggetti: le prime due variabili sono istanze di struct.
-
+  // Inizializzazione delle variabili tra cui le variabili di tempo. Le struct sono antenati degli oggetti: le prime due variabili sono istanze di struct
   struct tm *gmp, *gmp_run;
   // struct timeval *utime, *utime_run; //tempo iniziale in microsecondi e tempo della run in microsecondi
   time_t t0, t/*, t0_usec, t_usec*/;
