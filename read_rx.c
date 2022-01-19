@@ -30,14 +30,14 @@ int main(int argc, char *argv[]){
   struct timeval start, end, diff_time; 
   time_t t, t0;
   int ty, tmon, tday, thour, tmin, tsec, time_acq_h_MAX;
-  int i, n, nloc, InitFlag, StartFlag, nhit, hit, trg, cport_nr=17, bdrate=115200;  
+  int i, n, nloc, InitFlag, StartFlag, nhit, hit, trg, cport_nr=17, bdrate=115200, sleep_time = 400;  
 
   int cnt=0;
   FILE *file;
   FILE *currN; //file che salva il nome del file corrente affinch� possa essere usato da altri programmi
   
   double val_temp, val_hum, val_hum_corr;
-  unsigned char buf[4096],sht75_nblab03_frame[4]; //buf � un vettore di 4096 byte (char) organizzati in char //sht75_nblab03_frame � un array di 4 bytes (char)
+  unsigned char buf[4096],misurazioni[4]; //buf � un vettore di 4096 byte (char) organizzati in char //sht75_nblab03_frame � un array di 4 bytes (char)
   unsigned int val_temp_int, val_hum_int;
   char NameF[100];
 
@@ -130,11 +130,11 @@ int main(int argc, char *argv[]){
 
 	      if (InitFlag==1){ //parte dal terzo byte, dopo il primo di controllo
        
-          sht75_nblab03_frame[nloc]=buf[i]; //a partire dal terzo byte riempie il primo bit corrispondente a nloc=0
+          misurazioni[nloc]=buf[i]; //a partire dal terzo byte riempie il primo bit corrispondente a nloc=0
 
           if (nloc==1){
 	        	
-            val_hum_int=(sht75_nblab03_frame[0]<<8)|(sht75_nblab03_frame[1]); /*OR (restituisce un int) tra il primo byte traslato e il secondo;
+            val_hum_int=(misurazioni[0]<<8)|(misurazioni[1]); /*OR (restituisce un int) tra il primo byte traslato e il secondo;
                                                                                   in questo modo mettiamo in sequenza i due byte di umidit� relativo e li leggiamo
                                                                                   come un unico valore binario*/                                                                       
             val_hum=decodeHumidity(val_hum_int,val_temp);
@@ -144,13 +144,13 @@ int main(int argc, char *argv[]){
             
       	  else if(nloc==3){
       		
-            val_temp_int=(sht75_nblab03_frame[2]<<8)|(sht75_nblab03_frame[3]);
+            val_temp_int=(misurazioni[2]<<8)|(misurazioni[3]);
 	          val_temp=decodeTemperature(val_temp_int);
 	          val_hum_corr=corrHumidity(val_hum, val_hum_int, val_temp);
 	          
             if (cnt%100==0){
-              printf(" read_Hum MSB %x - LSB %x --> Hum16bitRaw  %x - HumReco %.2f (dec)\n",sht75_nblab03_frame[0],sht75_nblab03_frame[1],val_hum_int, val_hum_corr);
-	          	printf(" read Temp MSB %x - LSB %x --> Temp16bitRaw %x - TempReco %.2f (dec)\n",sht75_nblab03_frame[2],sht75_nblab03_frame[3],val_temp_int,val_temp);
+              printf(" read_Hum MSB %x - LSB %x --> Hum16bitRaw  %x - HumReco %.2f (dec)\n",misurazioni[0],misurazioni[1],val_hum_int, val_hum_corr);
+	          	printf(" read Temp MSB %x - LSB %x --> Temp16bitRaw %x - TempReco %.2f (dec)\n",misurazioni[2],misurazioni[3],val_temp_int,val_temp);
 		        }
 		    
             fprintf(file,"%d\t%d\t%d\t%d\t%ld(ms)\t", trg, gmp_run->tm_year+1900,gmp_run->tm_mon+1, gmp_run->tm_mday, 3600000*gmp_run->tm_hour + 60000*gmp_run->tm_min + 100*gmp_run->tm_sec + end.tv_usec/1000); 
@@ -183,9 +183,9 @@ int main(int argc, char *argv[]){
     }
 
     #ifdef _WIN32
-        Sleep(400); //sospende temporaneamente il processo per 400ms
+        Sleep(sleep_time); //sospende temporaneamente il processo per 400ms
     #else
-        usleep(400000); 
+        usleep(sleep_time * 1000); 
     #endif
   }
  
