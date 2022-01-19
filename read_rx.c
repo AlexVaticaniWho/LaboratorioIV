@@ -153,7 +153,7 @@ int main(int argc, char *argv[]){
 	          	printf(" read Temp MSB %x - LSB %x --> Temp16bitRaw %x - TempReco %.2f (dec)\n",misurazioni[2],misurazioni[3],val_temp_int,val_temp);
 		        }
 		    
-            fprintf(file,"%d\t%d\t%d\t%d\t%ld(ms)\t", trg, gmp_run->tm_year+1900,gmp_run->tm_mon+1, gmp_run->tm_mday, 3600000*gmp_run->tm_hour + 60000*gmp_run->tm_min + 100*gmp_run->tm_sec + end.tv_usec/1000); 
+            fprintf(file,"%d\t%d\t%d\t%d\t%ld(ms)\t", trg, gmp_run->tm_year+1900,gmp_run->tm_mon+1, gmp_run->tm_mday, diff_time.tv_sec*1000 + diff_time.tv_usec/1000); 
             fprintf(file,"\t%d\t%.2f\t",val_hum_int,val_hum_corr);
             fprintf(file,"%d\t%.2f\n",val_temp_int,val_temp);
 	        }
@@ -165,9 +165,9 @@ int main(int argc, char *argv[]){
          
         nloc++; //faccio crescere ad ogni iterazione nloc che tiene conto delle coppie di bytes acquisite
 
-        if (i>0 && buf[i]==0xAA && buf[i-1]==0xAA) //&& se entrambi gli operatori sono diversi da zero (veri) � una condizione vera
-                                                  //0x sta per "la seguente � una cifra esadecimale" AA � il byte di controllo in esadecimale 
-                                                  //cerchiamo due bytes di controllo AA consecutivi
+        if (i>0 && buf[i]==0xAA && buf[i-1]==0xAA) /*&& se entrambi gli operatori sono diversi da zero (veri) � una condizione vera
+                                                  0x sta per "la seguente � una cifra esadecimale" AA � il byte di controllo in esadecimale 
+                                                  cerchiamo due bytes di controllo AA consecutivi*/
         {
           StartFlag=1;
           nloc=0;
