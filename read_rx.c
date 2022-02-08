@@ -19,7 +19,7 @@ compile with the command: gcc read_rx.c rs232.c -Wall -Wextra -o2 -o read_rx
 
 //funzioni esterne
 double decodeTemperature(unsigned int rbuf);
-double decodeHumidity(unsigned int rbuf, double temperature_ref);
+double decodeHumidity(unsigned int rbuf);
 double corrHumidity(double hum_val, unsigned int rbuf, double temperature_ref);
 void time_diff(struct timeval t_start, struct timeval t_end, struct timeval *td);
 
@@ -30,16 +30,17 @@ int main(int argc, char *argv[]){
   struct timeval start, end, diff_time; 
   time_t t, t0;
   int ty, tmon, tday, thour, tmin, tsec, time_acq_h_MAX;
-  int i, n, nloc, InitFlag, StartFlag, nhit, hit, trg, cport_nr=17, bdrate=115200, sleep_time = 400;  
+  int i, n, nloc, InitFlag, nhit, hit, trg, cport_nr=17, bdrate=115200, sleep_time = 400;  
 
   int cnt=0;
   FILE *file;
   FILE *currN; //file che salva il nome del file corrente affinch� possa essere usato da altri programmi
-  
+  FILE *f_analysis; //file con stampa delle frequenze
+
   double val_temp, val_hum, val_hum_corr;
   unsigned char buf[4096],misurazioni[4]; //buf � un vettore di 4096 byte (char) organizzati in char //sht75_nblab03_frame � un array di 4 bytes (char)
   unsigned int val_temp_int, val_hum_int;
-  char NameF[100];
+  char NameF[100], FrequencyN[100];
 
   char mode[]={'8','N','1',0};  //8 bit, no parity, 1 bit di stop, no controllo del flusso
  
@@ -65,8 +66,10 @@ int main(int argc, char *argv[]){
   { 
     time_acq_h_MAX = atoi(argv[1]); //numero di ore massimo (int)
     sprintf(NameF,"sht75_nblab03_Hum_Temp_RUN_%04d%02d%02d%02d%02d%02d_%d_h.txt",ty,tmon,tday,thour,tmin,tsec,time_acq_h_MAX);
+    sprintf(FrequencyN,"analisi_frequenze_%04d%02d%02d%02d%02d%02d_%d_h.txt",ty,tmon,tday,thour,tmin,tsec,time_acq_h_MAX);
     printf("file_open %s --> durata in ore %d\n",NameF,time_acq_h_MAX);
     file = fopen(NameF, "w+" );
+    f_analysis = fopen(FrequencyN, "w+");
   }
 
   /***scrivo il nome del file nel file nome corrente affinch� possa essere usato da programmi esterni***/
@@ -81,11 +84,8 @@ int main(int argc, char *argv[]){
    
   if(RS232_OpenComport(cport_nr, bdrate, mode)) //sottinteso if (RS232_OpenComport() =1) perch� open comport restituisce 1 in caso di errore
   {
-    printf("Can not open comport\n");
-    
+    printf("Can not open comport\n");  
     return(0); 
-    
-    //break;
   }
 
    
@@ -104,12 +104,11 @@ int main(int argc, char *argv[]){
 
     gettimeofday(&end, NULL);
     time_diff(start, end, &diff_time);
-
     printf("%d %d ", cnt, n);
     
     printf("time diff: %ld (sec) \n", diff_time.tv_sec);
     
-    if ( diff_time.tv_sec >  time_acq_h_MAX*3600){	
+    if ( diff_time.tv_sec >  time_acq_h_MAX*60){	
       printf(" time_duration RUN in minutes > %d \n",time_acq_h_MAX*60); 
       break;
     }  
@@ -135,9 +134,9 @@ int main(int argc, char *argv[]){
           if (nloc==1){
 	        	
             val_hum_int=(misurazioni[0]<<8)|(misurazioni[1]); /*OR (restituisce un int) tra il primo byte traslato e il secondo;
-                                                                                  in questo modo mettiamo in sequenza i due byte di umidit� relativo e li leggiamo
-                                                                                  come un unico valore binario*/                                                                       
-            val_hum=decodeHumidity(val_hum_int,val_temp);
+                                                              in questo modo mettiamo in sequenza i due byte di umidit� relativo e li leggiamo
+                                                              come un unico valore binario*/                                                                       
+            val_hum=decodeHumidity(val_hum_int);
             trg++;
             hit++; 
           }
@@ -153,9 +152,13 @@ int main(int argc, char *argv[]){
 	          	printf(" read Temp MSB %x - LSB %x --> Temp16bitRaw %x - TempReco %.2f (dec)\n",misurazioni[2],misurazioni[3],val_temp_int,val_temp);
 		        }
 		    
-            fprintf(file,"%d\t%d\t%d\t%d\t%ld(ms)\t", trg, gmp_run->tm_year+1900,gmp_run->tm_mon+1, gmp_run->tm_mday, diff_time.tv_sec*1000 + diff_time.tv_usec/1000); 
-            fprintf(file,"\t%d\t%.2f\t",val_hum_int,val_hum_corr);
-            fprintf(file,"%d\t%.2f\n",val_temp_int,val_temp);
+            fprintf(file,"%*d\t%*d\t%*d\t%*d\t%*ld\t",6, trg,6, gmp_run->tm_year+1900,6,gmp_run->tm_mon+1,6, gmp_run->tm_mday,6, diff_time.tv_sec);
+            fprintf(file,"\t%*d\t%*.2f\t",6,val_hum_int,6,val_hum_corr);
+            fprintf(file,"%*d\t%*.2f\t",6,val_temp_int,6,val_temp);
+            if (trg%2 != 0) fprintf(file, "\n");
+            if (trg%2 == 0) fprintf(file, "%*ld\n",6, diff_time.tv_sec*1000 + diff_time.tv_usec/1000); 
+            
+            fprintf(f_analysis,"%*d\t%*.2f\t%*.2f\t%*ld\n",6, trg,6, val_hum_corr,6, val_temp,6, diff_time.tv_sec*1000 + diff_time.tv_usec/1000);
 	        }
 	    
           else if (nloc>5){
@@ -169,7 +172,6 @@ int main(int argc, char *argv[]){
                                                   0x sta per "la seguente � una cifra esadecimale" AA � il byte di controllo in esadecimale 
                                                   cerchiamo due bytes di controllo AA consecutivi*/
         {
-          StartFlag=1;
           nloc=0;
           
           if (InitFlag==0)
@@ -190,6 +192,7 @@ int main(int argc, char *argv[]){
   }
  
   fclose (file);
+  fclose(f_analysis);
 
   return(0);
 }
@@ -204,7 +207,7 @@ double decodeTemperature(unsigned int rbuf) {
   return d1+d2*rd_val ;
 }
 
-double decodeHumidity(unsigned int rbuf, double temperature_ref){
+double decodeHumidity(unsigned int rbuf){
   double c1, c2, c3, rd_val, hum_val;
   c1=-2.0468;
   c2=0.0367;
@@ -228,7 +231,12 @@ void time_diff(struct timeval t_start, struct timeval t_end, struct timeval *td)
   td->tv_sec =  t_end.tv_sec - t_start.tv_sec;
 
   if (td->tv_sec > 0 && td->tv_usec < 0) {
-      td->tv_usec += 1000000;
+      td->tv_usec += 1000000; 
       td->tv_sec--;
   }
 }
+
+/* td è un oggetto di tipo timeval e timeval è fatto così {timeval.tv_sec, timveval.tv_usec}
+dove tv_sec sono i secondi dall'epoch, e tv_usec sono i microsecondi passati dall'ultimo secondo.
+Nel caso di diff_time e quindi di td, nella funzione time_diff, tv_sec rappresenta i secondi passati
+dall'inizio mentre tv_usec i microsecondi passati dall'ultimo secondo.*/
